@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>日内合约月化计算器</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    label { display: block; margin-top: 10px; }
+    input { margin-left: 10px; }
+    button { margin-top: 20px; }
+    .result { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>日内合约月化计算器</h2>
+  <label>初始本金: <input type="number" id="initialCapital" value="10000"></label>
+  <label>单笔风险 (%): <input type="number" id="riskPerTrade" value="2"></label>
+  <label>目标金额: <input type="number" id="targetCapital" value="1000000"></label>
+  <label>交易年数: <input type="number" id="years" value="3"></label>
+  <label>盈亏比 (R): <input type="number" id="rr" value="2"></label>
+  <label>胜率 (%): <input type="number" id="winRate" value="50"></label>
+  <label>手续费 (单笔 %, 双边合计): <input type="number" id="fee" value="0.1"></label>
+  <button onclick="calculate()">计算</button>
+  <div class="result" id="result"></div>
+
+  <script>
+    function calculate() {
+      const initialCapital = parseFloat(document.getElementById('initialCapital').value);
+      const riskPerTrade = parseFloat(document.getElementById('riskPerTrade').value) / 100;
+      const targetCapital = parseFloat(document.getElementById('targetCapital').value);
+      const years = parseFloat(document.getElementById('years').value);
+      const rr = parseFloat(document.getElementById('rr').value);
+      const winRate = parseFloat(document.getElementById('winRate').value) / 100;
+      const fee = parseFloat(document.getElementById('fee').value) / 100;
+
+      const months = years * 12;
+      const requiredGrowth = targetCapital / initialCapital;
+      const monthlyGrowth = Math.pow(requiredGrowth, 1 / months) - 1;
+
+      const expectedR = winRate * rr - (1 - winRate) * 1;
+      let expectedReturnPerTrade = expectedR * riskPerTrade;
+
+      // 扣除手续费影响
+      expectedReturnPerTrade -= fee;
+
+      const tradesPerMonth = monthlyGrowth / expectedReturnPerTrade;
+
+      // 盈亏平衡胜率计算 (扣除手续费)
+      const breakevenWinRate = (1 + fee) / (rr + 1 + fee);
+
+      document.getElementById('result').innerHTML = `
+        需要月化收益率: ${(monthlyGrowth * 100).toFixed(2)}%<br>
+        单笔预期收益率(扣除手续费): ${(expectedReturnPerTrade * 100).toFixed(2)}%<br>
+        每月需要交易次数: ${Math.ceil(tradesPerMonth)} 次<br>
+        盈亏平衡胜率: ${(breakevenWinRate * 100).toFixed(2)}%
+      `;
+    }
+  </script>
+</body>
+</html>
